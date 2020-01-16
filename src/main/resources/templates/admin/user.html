@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-cn" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
+<head>
+  <meta charset="utf-8">
+  <title>西部CA在线自主缴费平台</title>
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <link rel="Bookmark" th:href="@{/static/favicon.ico}" type="image/x-icon">
+  <link rel="Shortcut Icon" th:href="@{/static/favicon.ico}" type="image/x-icon"/>
+  <link rel="stylesheet" th:href="@{/static/layui/css/layui.css}">
+  <link rel="stylesheet" th:href="@{/static/admin/style/admin.css}" media="all">
+  <link rel="stylesheet" th:href="@{/static/admin/style/notice.css}">
+</head>
+<body>
+  <div class="layui-fluid">
+    <div class="layui-card">
+      <div class="layui-form layui-card-header layuiadmin-card-header-auto">
+        <div class="layui-form-item">
+          <div class="layui-inline">
+            <label class="layui-form-label">用户类型</label>
+            <div class="layui-input-block">
+              <select name="userType">
+                <option value="customer">普通客户</option>
+                <option value="manager">管理员</option>
+              </select>
+            </div>
+          </div>
+          <div class="layui-inline">
+            <label class="layui-form-label">用户编码</label>
+            <div class="layui-input-block">
+              <input type="text" name="userCode" placeholder="请输入" autocomplete="off" class="layui-input" style="width: 186px;">
+            </div>
+          </div>
+          <div class="layui-inline">
+            <label class="layui-form-label">用户名称</label>
+            <div class="layui-input-block">
+              <input type="text" name="userName" placeholder="请输入" autocomplete="off" class="layui-input" style="width: 186px;">
+            </div>
+          </div>
+          <div class="layui-inline">
+            <label class="layui-form-label">所属行业</label>
+            <div class="layui-input-block">
+              <select id="tradeCode" name="tradeCode">
+                <option value="">---</option>
+              </select>
+            </div>
+          </div>
+          <div class="layui-inline">
+            <label class="layui-form-label">录入时间</label>
+            <div class="layui-input-block">
+              <input type="text" id="createTime" name="createTime" placeholder="请输入" autocomplete="off" class="layui-input" style="width: 186px;">
+            </div>
+          </div>
+          <div class="layui-inline">
+            <button class="layui-btn layuiadmin-btn-useradmin" lay-submit lay-filter="LAY-user-front-search">
+              <i class="layui-icon layui-icon-search layuiadmin-button-btn"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="layui-card-body">
+        <table id="LAY-user-manage" lay-filter="LAY-user-manage"></table>
+        <script type="text/html" id="toolbar">
+          <div class="layui-btn-container">
+            <button class="layui-btn layui-btn-sm" lay-event="add">添加用户</button>
+            <button class="layui-btn layui-btn-sm" lay-event="roles">角色管理</button>
+          </div>
+        </script>
+        <script type="text/html" id="status">
+          <input type="checkbox" name="status" value="{{d.id}}" title="有效" lay-filter="lock" {{ d.status == 0 ? 'checked' : '' }}>
+        </script>
+        <script type="text/html" id="table-user">
+          <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="edit"><i class="layui-icon layui-icon-edit"></i>编辑</a>
+          <!--<a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del"><i class="layui-icon layui-icon-delete"></i>删除</a>-->
+        </script>
+      </div>
+    </div>
+  </div>
+
+  <script th:src="@{/static/layui/layui.js}" type="text/javascript"></script>
+  <script th:inline="javascript">
+    layui.config({
+      base: [[@{'/static/admin/'}]] //静态资源所在路径
+    }).extend({
+      index: 'lib/index' //主入口模块
+  }).use(['index', 'table','form','admin','laydate','notice'], function(){
+    var $ = layui.$
+    ,form = layui.form
+    ,admin = layui.admin
+    ,laydate = layui.laydate
+    ,notice = layui.notice
+    ,table = layui.table;
+
+    laydate.render({
+      elem: '#createTime'
+      ,calendar: true
+      ,trigger: 'click'
+      ,theme: 'molv'
+      ,range: '到'
+    });
+
+    var selection = document.getElementById("tradeCode");
+    admin.req({
+        url: [[@{'/user/listTrade'}]]
+        ,success: function(res){
+        if(0 === res.code){
+          var trades = res.data;
+          for(var i in trades){
+            selection.options.add(new Option(trades[i].description, trades[i].code));
+          }
+          form.render('select');
+        }else{
+          notice.error("加载行业列表异常：状态码【"+res.code+"】,错误信息【"+res.msg+"】");
+        }
+      }
+    });
+
+      //用户管理
+    table.render({
+    elem: '#LAY-user-manage'
+    ,url: [[@{'/user/listPage'}]]
+    ,where: {userType: 'customer'}
+    ,method: 'post'
+    ,parseData: function(res){
+            return {
+                "code": res.code, //解析接口状态
+                "msg": res.msg, //解析提示文本
+                "count": res.data.totalElements, //解析数据长度
+                "data": res.data.content //解析数据列表
+            };
+    }
+    ,title: '系统用户表'
+    ,toolbar: "#toolbar"
+    ,defaultToolbar: ['filter']
+    ,loading: true
+    ,cols: [ [
+              {type: 'checkbox', fixed: 'left'}
+              ,{field: 'id', width: 80, title: 'ID', fixed: 'left', unresize: true,align:'center'}
+              ,{field: 'userCode', title: '用户编码', width: 100}
+              ,{field: 'userName', title: '用户名称', align:'center'}
+              ,{field: 'phone', title: '联系电话',align:'center'}
+              ,{field: 'address', title: '地址',align:'center'}
+              ,{field: 'dmLotTrade', title: '所属行业',align:'center',templet: function(row){
+                        if (null != row.dmLotTrade){
+                          return row.dmLotTrade.description
+                        }else{
+                          return "-"
+                        }}}
+              ,{field: 'userType', title: '用户类型',align:'center',sort: true,templet: function(row){
+                        if ("customer" === row.userType){
+                            return '<button class="layui-btn layui-btn-xs layui-btn-radius">普通客户</button>'
+                        }else{
+                            return '<button class="layui-btn layui-btn-xs layui-btn-radius layui-btn-normal">管理员</button>'
+                        }}}
+              ,{field: 'lotRole', title: '用户角色',align:'center',templet: function(row){
+                        if (null != row.lotRole){
+                          return row.lotRole.business
+                        }else{
+                          return "-"
+                        }}}
+              ,{field: 'creater', title: '录入人',align:'center'}
+              ,{field: 'createTime', title: '录入时间',align:'center',sort: true}
+              ,{field: 'updater', title: '更新人',align:'center',hide:'true'}
+              ,{field: 'updateTime', title: '更新时间',align:'center',hide:'true'}
+              ,{field:'status', width: 100,title:'有效标志', templet: '#status', fixed: 'right', align:'center'}
+              ,{title: '操作', width: 80, align:'center', fixed: 'right', toolbar: '#table-user'}
+    ] ]
+    ,page: { //支持传入 laypage 组件的所有参数（某些参数除外，如：jump/elem） - 详见文档
+        layout: ['limit', 'count', 'prev', 'page', 'next', 'skip']//自定义分页布局
+        ,limit:25
+        ,limits:[25, 50, 100]
+        ,first: false //不显示首页
+        ,last: false //不显示尾页
+    }
+    ,height: 'full-150'
+    });
+
+    table.on('toolbar(LAY-user-manage)', function(obj){
+      switch(obj.event){
+        case 'add':
+          layer.open({
+              type: 2
+              ,title: '添加用户'
+              ,content: [[@{'/user/change'}]]
+              ,maxmin: true
+              ,area: ['650px', '500px']
+              ,btn: ['确定', '取消']
+              ,yes: function(index,layero){
+              var iframeWindow = window['layui-layer-iframe'+ index],submitID = 'LAY-user-front-submit',submit = layero.find('iframe').contents().find('#'+ submitID);
+              //监听提交
+              iframeWindow.layui.form.on('submit('+ submitID +')', function(data){
+                var field = data.field; //获取提交的字段
+                admin.req({
+                    url: [[@{'/user/insert'}]]
+                    ,data: field
+                    ,success: function(res){
+                    if(0 === res.code){
+                      notice.success(res.msg);
+                      table.reload('LAY-user-manage', {
+                        where: {
+                          userType: $("#userType").val()
+                        }
+                      });
+                    }else{
+                      notice.error("用户添加异常：状态码【"+res.code+"】,错误信息【"+res.msg+"】");
+                    }
+                  }
+                });
+                layer.close(index); //关闭弹层
+              });
+              submit.trigger('click');
+            }
+          });
+        break;
+      case 'roles':
+        var checkStatus = table.checkStatus('LAY-user-manage') ,checkData = checkStatus.data; //得到选中的数据
+        if(checkData.length === 0){
+          layer.msg('请先选择一条数据！', {icon: 5});
+        }else{
+          layer.open({
+            type: 1,
+            title: '角色管理',
+            area: ['450px', '130px'],
+            content: '<div id="user_role" style="vertical-align: top;display: inline-block;width: 300px;margin: 20px;"></div><button class="layui-btn" id="authorize" style="margin-top: 20px">确认</button>',
+            success: function(layero, index){
+              //这里因为内容过少, 会被遮挡, 所以简单修改了下样式
+              document.getElementById('layui-layer' + index).getElementsByClassName('layui-layer-content')[0].style.overflow = 'unset';
+              //渲染多选
+              var userRole = xmSelect.render({
+                el: '#user_role',
+                radio: true,
+                filterable: true,
+                clickClose: true,
+                empty: '呀, 没有数据呢',
+                searchTips: '选择角色',
+                template({ item, sels, name, value }){
+                  return name  + '<span style="position: absolute; right: 10px; color: #8799a3">【'+value+'】</span>'
+                },
+                data: [ ]
+              });
+              admin.req({
+                url: [[@{'/user/listRole'}]]
+                ,data: {'roleType': checkData[0].userType, 'status': 0 }
+                ,success: function(res){
+                    if(0 === res.code){
+                      datas = [];
+                      for (var i in res.data){
+                        var ll = {};
+                        ll.name = res.data[i].business;
+                        ll.value = res.data[i].code;
+                        datas.push(ll);
+                      }
+                      userRole.update({
+                        data: datas,
+                        autoRow: true
+                      })
+                    }else{
+                      notice.error("获取角色列表异常：状态码【"+res.code+"】,错误信息【"+res.msg+"】");
+                    }
+                  }
+            });
+              document.getElementById('authorize').onclick = function(){
+                //获取当前多选选中的值
+                var selectArr = userRole.getValue();
+                var userIds = [];
+                for (var i in checkData) {
+                  userIds.push(checkData[i].id);
+                }
+                admin.req({
+                  url: [[@{'/user/authorize'}]]
+                  ,data: {'userIds': userIds.join(","), 'roleCode': selectArr[0].value }
+                  ,success: function(res){
+                      if(0 === res.code){
+                        notice.success(res.msg);
+                        table.reload('LAY-user-manage', {
+                          where: {
+                            userType:  $("#userType").val()
+                          }
+                        });
+                        layer.close(index);
+                      }else{
+                        notice.error("获取父权限列表异常：状态码【"+res.code+"】,错误信息【"+res.msg+"】");
+                      }
+                    }
+                  });
+              }
+            }
+          });
+        }
+        break;
+      };
+    });
+    table.on('tool(LAY-user-manage)', function(obj){
+      switch(obj.event){
+        case 'edit':
+          layer.open({
+                type: 2
+                ,title: '编辑用户'
+                ,content: [[@{'/user/change?id='}]]+obj.data.id
+                ,maxmin: true
+                ,area: ['650px', '500px']
+                ,btn: ['确定', '取消']
+                ,yes: function(index, layero){
+                  var iframeWindow = window['layui-layer-iframe'+ index],submitID = 'LAY-user-front-submit',submit = layero.find('iframe').contents().find('#'+ submitID);
+                  //监听提交
+                  iframeWindow.layui.form.on('submit('+ submitID +')', function(data){
+                    var field = data.field; //获取提交的字段
+                    //提交 Ajax 成功后，静态更新表格中的数据
+                    admin.req({
+                      url: [[@{'/user/update'}]]
+                      ,data: field
+                      ,success: function(res){
+                          if(0 === res.code){
+                            notice.success(res.msg);
+                            table.reload('LAY-user-manage', {
+                              where: {
+                                userType:  $("#userType").val()
+                              }
+                            });
+                          }else{
+                            notice.error("用户更新异常：状态码【"+res.code+"】,错误信息【"+res.msg+"】");
+                          }
+                        }
+                      });
+                    layer.close(index); //关闭弹层
+                  });
+                  submit.trigger('click');
+                }
+          });
+          break;
+      };
+    });
+    //监听锁定操作
+    form.on('checkbox(lock)', function(obj){
+      admin.req({
+        url: [[@{'/user/vaild'}]]
+        ,data:  {"id":this.value,"status":obj.elem.checked?'0':'1'}
+        ,success: function(res){
+            if(0 === res.code){
+              notice.success(res.msg);
+              table.reload('LAY-user-manage', {
+                where: {
+                  userType:  $("#userType").val()
+                }
+              });
+            }else{
+              notice.error("操作异常：状态码【"+res.code+"】,错误信息【"+res.msg+"】");
+            }
+          }
+        });
+    });
+    //监听搜索
+    form.on('submit(LAY-user-front-search)', function(data){
+      var field = data.field;
+      //执行重载
+      table.reload('LAY-user-manage', {
+        where: field
+      });
+    });
+
+    table.on('sort(LAY-user-manage)', function(obj){
+        table.reload('LAY-user-manage', {
+          initSort: obj //记录初始排序，如果不设的话，将无法标记表头的排序状态。
+          ,where: { //请求参数（注意：这里面的参数可任意定义，并非下面固定的格式）
+            field: obj.field //排序字段
+            ,order: obj.type //排序方式
+          }
+        });
+      });
+
+  });
+  </script>
+</body>
+</html>

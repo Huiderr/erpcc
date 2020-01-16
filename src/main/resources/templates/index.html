@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-cn" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
+<head>
+  <meta charset="utf-8">
+  <title>西部CA在线自主缴费平台</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="Shortcut Icon" th:href="@{/static/favicon.ico}" type="image/x-icon"/>
+  <link rel="Bookmark" th:href="@{/static/favicon.ico}" type="image/x-icon">
+  <link rel="stylesheet" th:href="@{/static/layui/css/layui.css}">
+  <link rel="stylesheet" th:href="@{/static/front/css/global.css}">
+</head>
+<body >
+
+<div class="fly-header" style="background-color: #168de9">
+  <div class="layui-container">
+    <a class="fly-logo" href="">
+      <img th:src="@{/static/front/images/logo.png}" alt="layui" style="height: 83px;">
+      <h1 style="font-size: 35px;color: #FFF; display : inline;letter-spacing: 5px;margin-left: 25px;font-weight: bold">西部安全认证中心自助缴费平台</h1>
+    </a>
+    <ul class="layui-nav fly-nav-user" style="top: 40px;">
+      <li class="layui-nav-item">
+        <a class="fly-nav-avatar" href="javascript:" th:href="@{/index}">
+          <i class="layui-icon layui-icon-home" th:title="${user.userName}" style="font-size: 35px;margin-left: 2px;margin-bottom: -5px;font-weight: bold;"></i>
+        </a>
+      </li>
+      <li class="layui-nav-item">
+        <a class="fly-nav-avatar fly-user" href="javascript:void (0);" th:attr="data-type=@{/index/uinfo}">
+          <i class="layui-icon layui-icon-username" style="font-size: 35px;margin-left: 2px;margin-bottom: -5px;font-weight: bold;" title="用户信息"></i>
+        </a>
+      </li>
+      <li class="layui-nav-item">
+        <a class="fly-nav-avatar fly-user" href="javascript:void (0);" th:attr="data-type=@{/index/upassword}">
+            <i class="layui-icon layui-icon-password" style="font-size: 35px;margin-left: 2px;margin-bottom: -5px;font-weight: bold;" title="修改密码"></i>
+        </a>
+      </li>
+      <li class="layui-nav-item">
+        <a class="fly-nav-avatar" href="javascript:" th:href="@{/logout}">
+            <i class="layui-icon layui-icon-spread-left" style="font-size: 35px;margin-left: 2px;margin-bottom: -5px;font-weight: bold;" title="退出登陆"></i>
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="layui-container" style="top: 60px;">
+  <div class="layui-row layui-col-space15">
+    <div class="layui-col-md8 main-panel">
+      <div class="fly-panel" style="height: 600px;display: block" id="main_panel">
+        <div class="fly-panel-title fly-filter">
+          <a>特色业务</a>
+        </div>
+        <div class="layui-row layui-col-space10" style="padding: 50px;" th:if="${routes ne null}" th:each="route : ${routes}">
+          <div class="layui-col-md4" style="text-align: center;margin-bottom: 50px;" th:if="${route.nodes ne null}" th:each="node : ${route.nodes}">
+              <a class="index_active" href="javascript:void (0);" th:attr="data-type=@{${node.routeUrl}}">
+                  <img class="fly-ts-img" th:src="@{/static/front/images/{png}(png=${node.icon})}" th:attr="alt=${node.code}" alt="">
+                  <br><span style="font-size: 14px;" th:text="${node.business}"></span>
+              </a>
+          </div>
+        </div>
+      </div>
+      <div class="fly-panel" style="height: 600px;display: none" id="dzht_panel">
+        <div class="fly-panel-title fly-filter">
+          <a>电子合同</a>
+          <a id="dzht-child" style="float: right;"><i class="layui-icon layui-icon-close" style="font-size: 20px;color:black;"></i></a>
+        </div>
+        <div class="layui-row layui-col-space10" style="padding: 10px;" >
+          <table id="dzht-table" lay-filter="dzht-table"></table>
+        </div>
+      </div>
+      <div class="fly-panel" style="height: 600px;display: none" id="jfjl_panel">
+        <div class="fly-panel-title fly-filter">
+          <a>缴费记录</a>
+          <a id="jfjl-child" style="float: right;"><i class="layui-icon layui-icon-close" style="font-size: 20px;color:black;"></i></a>
+        </div>
+        <div class="layui-row layui-col-space10" style="padding: 10px;" >
+          <table id="jfjl-table" lay-filter="jfjl-table"></table>
+        </div>
+      </div>
+      <div class="fly-panel" style="height: 600px;display: none" id="dzfp_panel">
+        <div class="fly-panel-title fly-filter">
+          <a>电子发票</a>
+          <a id="dzfp-child" style="float: right;"><i class="layui-icon layui-icon-close" style="font-size: 20px;color:black;"></i></a>
+        </div>
+        <div class="layui-row layui-col-space10" style="padding: 10px;" >
+          <table id="dzfp-table" lay-filter="dzfp-table"></table>
+        </div>
+      </div>
+      <div class="fly-panel" style="height: 600px;display: none" id="tzgg_panel">
+        <div class="fly-panel-title fly-filter">
+          <a>通知公告</a>
+          <a id="tzgg-child" style="float: right;"><i class="layui-icon layui-icon-close" style="font-size: 20px;color:black;"></i></a>
+        </div>
+        <div class="layui-row layui-col-space10" style="padding: 10px;" >
+          <table id="tzgg-table" lay-filter="tzgg-table"></table>
+          <script type="text/html" id="notices">
+            {{#  if(d.notice === '公告'){ }}
+            <button type="button" class="layui-btn layui-btn-warm layui-btn-xs">公告</button>
+            {{#  } }}
+            {{#  if(d.notice === '通知'){ }}
+            <button type="button" class="layui-btn layui-btn-xs">通知</button>
+            {{#  } }}
+          </script>
+          <script type="text/html" id="table-notice">
+            <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="view"><i class="layui-icon layui-icon-edit"></i>查看</a>
+          </script>
+        </div>
+      </div>
+    </div>
+    <div class="layui-col-md4">
+      <div class="fly-panel" style="height: 275px;">
+        <h3 class="fly-panel-title">我的事项</h3>
+        <ul class="fly-panel-main fly-list-static">
+          <li>
+            <a href="" target="_blank">电子合同<span class="layui-badge" style="margin-left: 60%;">10</span></a>
+          </li>
+          <li>
+            <a href="" target="_blank">缴费记录<span class="layui-badge" style="margin-left: 60%;">9</span></a>
+          </li>
+          <li>
+            <a href="" target="_blank">电子发票<span class="layui-badge" style="margin-left: 60%;">99</span></a>
+          </li>
+        </ul>
+      </div>
+      <div class="fly-panel" style="height: 300px;">
+        <div class="fly-panel-title fly-filter">
+          <a>通知公告</a>
+          <a style="color: white; margin-left: 230px;" id="tzgg"><i class="layui-icon layui-icon-next"></i> 更多</a>
+        </div>
+        <ul class="fly-list" id="noticeList">
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="fly-footer">
+  <p>西部安全认证中心有限责任公司 2019 &copy; cwca</p>
+  <p>
+    公司地址:银川市金凤区新昌西路65号易大紫荆花商务中心A座7层 <a href="" target="_blank">服务电话：4008-600271</a>
+  </p>
+</div>
+<script type="text/javascript" th:src="@{/static/layui/layui.js}"></script>
+<!--[if lt IE 9]>
+<script type="text/javascript" th:src="@{/static/front/js/html5.min.js}"></script>
+<script type="text/javascript" th:src="@{/static/front/js/respond.min.js}"></script>
+<![endif]-->
+<script th:inline="javascript">
+  layui.config({
+    version: "3.0.0",
+    base: [[@{'/static/front/js'}]]
+  }).extend({
+    index: '/index' //主入口模块
+  }).use(['index', 'form','notice','table'], function(){
+    var $ = layui.$,index = layui.index,table = layui.table,notice = layui.notice;
+
+    var user = [[${ user}]] ? [[${ user}]]:null;
+    console.log(user);
+
+    $('.fly-nav-avatar.fly-user').on('click', function(){
+      var type = $(this).data('type');
+      layer.open({
+          title: '用户信息',
+          type: 2,
+          anim: 2,
+          content: type,
+          area: ['60%', '60%'],
+          maxmin: true,
+          closeBtn: 1
+      });
+    });
+
+    $('.index_active').on('click', function(){
+        var type = $(this).data('type');
+        layer.open({
+            title: '自助业务',
+            type: 2,
+            anim: 2,
+            content: type,
+            area: ['80%', '85%'],
+            maxmin: true,
+            closeBtn: 1
+        });
+    });
+
+    index.req({
+      url: [[@{'/index/notice'}]]
+      ,data: {"trade":user.dmLotTrade.code,"notice":"公告"}
+      ,success: function(res){
+          if(0 === res.code){
+            for(var i in res.data){
+              layer.open({
+                title: '公告',
+                type: 2,
+                anim: 2,
+                content: [[@{'/index/notice/detail?id='}]]+res.data[i].id,
+                area: ['60%', '65%'],
+                maxmin: true,
+                scrollbar: false,
+                closeBtn: 1
+              });
+            }
+          }else{
+            notice.error("通知信息获取异常：状态码【"+res.code+"】,错误信息【"+res.msg+"】");
+          }
+        }
+      });
+
+    index.req({
+      url: [[@{'/index/notice'}]]
+      ,data: {"trade":user.dmLotTrade.code}
+      ,success: function(res){
+          var notices = $("#noticeList");
+          var html = '';
+          if(0 === res.code){
+            for(var i in res.data){
+              if(i <= 3){
+                html += '<li><h2><a class="layui-badge">'+res.data[i].trade+'</a>' +
+                        '<a class="notice_active" href="javascript:void (0);" data-type="'+res.data[i].id+'">'+res.data[i].title+'</a>' +
+                        '</h2><div class="fly-list-info"><a href="javascript:void (0);" link><cite>西部安全认证中心有限责任公司</cite></a>' +
+                        '<span class="fly-list-nums"><i class="iconfont icon-pinglun1" title="发布时间"></i>' +res.data[i].start+
+                        '</span></div><div class="fly-list-badge">';
+                if(res.data[i].notice === '通知'){
+                  html +='<span class="layui-badge layui-bg-blue">通知</span>' +
+                          '</div></li>';
+                }
+                if(res.data[i].notice === '公告'){
+                  html +='<span class="layui-badge layui-bg-orange">公告</span>' +
+                          '</div></li>';
+                }
+              }
+            }
+            notices.html(html);
+          }else{
+            notice.error("通知信息获取异常：状态码【"+res.code+"】,错误信息【"+res.msg+"】");
+          }
+
+          $('.fly-list .notice_active').on('click', function(){
+            var type = $(this).data('type');
+            layer.open({
+              title: '通知公告',
+              type: 2,
+              anim: 2,
+              content: [[@{'/index/notice/detail?id='}]]+type,
+              area: ['60%', '65%'],
+              maxmin: true,
+              scrollbar: false,
+              closeBtn: 1
+            });
+          });
+      }
+    });
+
+    document.getElementById("tzgg").onclick = function(){
+      $('.main-panel .fly-panel').each(function(index){
+        $(this).hide();
+      });
+      //用户管理
+      table.render({
+        elem: '#tzgg-table'
+        ,url: [[@{'/index/notice/list'}]]
+        ,where: {'trade':user.dmLotTrade.code}
+        ,method: 'post'
+        ,parseData: function(res){
+            return {
+              "code": res.code, //解析接口状态
+              "msg": res.msg, //解析提示文本
+              "data": res.data //解析数据列表
+            };
+         }
+        ,page: false
+        ,title: '通知公告列表'
+        ,loading: true
+        ,cols: [ [
+            {field: 'id', hide:true}
+            ,{field:'notice', title:'通知公告', align:'center',fixed: 'left',templet: '#notices'}
+            ,{field:'title', title:'标题', align:'center'}
+            ,{field:'start', title: '发布日期', align:'center'}
+            ,{title: '操作',  align:'center',  toolbar: '#table-notice'}
+          ] ]
+        ,height: '500'
+        ,skin: 'row'
+        ,even: true
+    });
+      $("#tzgg_panel").show();
+    };
+
+    document.getElementById("tzgg-child").onclick = function(){
+      $('.main-panel .fly-panel').each(function(index){
+        $(this).hide();
+      });
+      $("#main_panel").show();
+    };
+
+    table.on('tool(tzgg-table)', function(obj){
+      var data = obj.data;
+      if(obj.event === 'view'){
+        layer.open({
+          title: '通知公告',
+          type: 2,
+          anim: 2,
+          content: [[@{'/index/notice/detail?id='}]]+data.id,
+                area: ['60%', '65%'],
+                maxmin: true,
+                scrollbar: false,
+                closeBtn: 1
+          });
+      }
+    });
+
+  });
+
+</script>
+
+</body>
+</html>

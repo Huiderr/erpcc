@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-cn" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
+<head>
+    <meta charset="utf-8">
+    <title>404</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="Bookmark" th:href="@{/static/favicon.ico}" type="image/x-icon">
+    <link rel="Shortcut Icon" th:href="@{/static/favicon.ico}" type="image/x-icon"/>
+    <link rel="stylesheet" th:href="@{/static/layui/css/layui.css}">
+    <link rel="stylesheet" th:href="@{/static/front/css/global.css}">
+</head>
+<body>
+
+<div class="fly-header" style="background-color: #168de9">
+    <div class="layui-container">
+        <a class="fly-logo" href="">
+            <img th:src="@{/static/front/images/logo.png}" alt="layui" src="" style="height: 83px;">
+            <h1 style="font-size: 35px;color: #FFF; display : inline;letter-spacing: 5px;margin-left: 25px;font-weight: bold">西部安全认证中心自助缴费平台</h1>
+        </a>
+    </div>
+</div>
+
+<div class="layui-container fly-marginTop" style="top: 60px;">
+	<div class="fly-panel">
+	  <div class="fly-none">
+	    <h2><i class="layui-icon layui-icon-404 iconfont"></i></h2>
+	    <p>内部服务器出现错误，请联系管理员…</p>
+	  </div>
+	</div>
+</div>
+
+<div class="fly-footer">
+    <p>西部安全认证中心有限责任公司 2019 &copy; cwca</p>
+    <p>
+        公司地址:银川市金凤区新昌西路65号易大紫荆花商务中心A座7层 <a href="" target="_blank">服务电话：4008-600271</a>
+    </p>
+</div>
+<script type="text/javascript" th:src="@{/static/layui/layui.js}"></script>
+
+</body>
+</html>

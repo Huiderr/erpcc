@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-cn" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
+<head>
+  <meta charset="utf-8">
+  <title>西部CA在线自主缴费平台</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="Bookmark" th:href="@{/static/favicon.ico}" type="image/x-icon">
+  <link rel="Shortcut Icon" th:href="@{/static/favicon.ico}" type="image/x-icon"/>
+  <link rel="stylesheet" th:href="@{/static/layui/css/layui.css}">
+  <link rel="stylesheet" th:href="@{/static/front/css/global.css}">
+</head>
+<body>
+
+<div class="fly-header" style="background-color: #168de9">
+  <div class="layui-container">
+    <a class="fly-logo" href="">
+      <img th:src="@{/static/front/images/logo.png}" alt="layui" src="" style="height: 83px;">
+      <h1 style="font-size: 35px;color: #FFF; display : inline;letter-spacing: 5px;margin-left: 25px;font-weight: bold">西部安全认证中心自助缴费平台</h1>
+    </a>
+  </div>
+</div>
+
+<div class="layui-container fly-marginTop" style="top: 60px;">
+  <div class="fly-panel fly-panel-user" pad20>
+    <div class="layui-tab layui-tab-brief" lay-filter="user">
+      <ul class="layui-tab-title" style="text-align: center;">
+        <li class="layui-this" style="font-size: 20px;">登录</li>
+        <li style="font-size: 20px;">USB-KEY</li>
+      </ul>
+      <div class="layui-tab-content" style="padding: 50px 0;text-align: center;">
+        <div class="layui-tab-item layui-show">
+          <div class="layui-form layui-form-pane">
+            <form id="pwd" method="post" th:action="@{/login}">
+              <div style="color: red;margin-bottom: 10px;"><p th:text="${session.get('SPRING_SECURITY_LAST_EXCEPTION')}"></p></div>
+              <div class="layui-form-item fly-ts-input" style="margin-bottom: 30px;">
+                <label for="username" class="layui-form-label">用户名</label>
+                <div class="layui-input-inline">
+                  <input type="text" id="username" name="username" required lay-verify="required" autocomplete="off" class="layui-input" style="width: 300px;">
+                </div>
+              </div>
+              <div class="layui-form-item fly-ts-input" style="margin-bottom: 30px;">
+                <label for="password" class="layui-form-label">密码</label>
+                <div class="layui-input-inline">
+                  <input type="password" id="password" name="password" required lay-verify="required" autocomplete="off" class="layui-input" style="width: 300px;">
+                </div>
+              </div>
+              <input type="hidden" name="flag" value="0">
+              <div class="layui-form-item" style="margin-bottom: 30px;">
+                <button class="layui-btn" lay-submit lay-filter="pwd">立即登录</button>
+              </div>
+            </form>
+          </div>
+        </div>
+        <div class="layui-form-pane layui-tab-item">
+          <div class="layui-form layui-form-pane">
+            <form id="key" method="post" th:action="@{/login}">
+              <div style="color: red;margin-bottom: 10px;"><p th:text="${session.get('SPRING_SECURITY_LAST_EXCEPTION')}"></p></div>
+              <div class="layui-form-item fly-ts-input" style="margin-bottom: 30px;">
+                <label for="ukey" class="layui-form-label" style="padding: 10px 15px;"><i class="layui-icon" style="font-size: 35px; color: #1E9FFF;font-weight: bold;">&#xe6ed;</i></label>
+                <div class="layui-input-inline">
+                  <input type="text" id="ukey" name="ukey" required lay-verify="required" autocomplete="off" class="layui-input" style="width: 300px;">
+                </div>
+              </div>
+              <input type="hidden" name="flag" value="1">
+              <div class="layui-form-item" style="margin-bottom: 30px;">
+                <button class="layui-btn" lay-submit lay-filter="key">立即登录</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="fly-footer">
+  <p>西部安全认证中心有限责任公司 2019 &copy; cwca</p>
+  <p>
+    公司地址:银川市金凤区新昌西路65号易大紫荆花商务中心A座7层 <a href="" target="_blank">服务电话：4008-600271</a>
+  </p>
+</div>
+<script type="text/javascript" th:src="@{/static/layui/layui.js}"></script>
+<!--[if lt IE 9]>
+<script type="text/javascript" th:src="@{/static/front/js/html5.min.js}"></script>
+<script type="text/javascript" th:src="@{/static/front/js/respond.min.js}"></script>
+<![endif]-->
+<script th:inline="javascript">
+  layui.config({
+    version: "3.0.0",
+    base: [[@{'/static/front/js'}]]
+  }).extend({
+    index: '/index' //主入口模块
+  }).use('index')
+</script>
+</body>
+</html>

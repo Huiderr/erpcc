@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh-cn" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
+<head>
+  <meta charset="utf-8">
+  <title>西部CA在线自主缴费平台</title>
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <link rel="Bookmark" th:href="@{/static/favicon.ico}" type="image/x-icon">
+  <link rel="Shortcut Icon" th:href="@{/static/favicon.ico}" type="image/x-icon"/>
+  <link rel="stylesheet" th:href="@{/static/layui/css/layui.css}">
+  <style>
+    body .layui-edit-face{ border:none; background:none;}
+    body .layui-edit-face  .layui-layer-content{padding:0; background-color:#fff; color:#666; box-shadow:none}
+    .layui-edit-face .layui-layer-TipsG{display:none;}
+    .layui-edit-face ul{position:relative; width:372px; padding:10px; border:1px solid #D9D9D9; background-color:#fff; box-shadow: 0 0 20px rgba(0,0,0,.2);}
+    .layui-edit-face ul li{cursor: pointer; float: left; border: 1px solid #e8e8e8; height: 22px; width: 26px; overflow: hidden; margin: -1px 0 0 -1px; padding: 4px 2px; text-align: center;}
+    .layui-edit-face ul li:hover{position: relative; z-index: 2; border: 1px solid #eb7350; background: #fff9ec;}
+
+    .fly-edit{position:relative; display: block; top: 1px; left:0; padding:0 10px; border: 1px solid #e6e6e6; border-radius: 2px 2px 0 0; background-color: #FBFBFB;}
+    .fly-edit span{cursor:pointer; padding:0 10px; line-height: 38px; color:#009E94;}
+    .fly-edit span i{position: relative; padding-right: 6px; font-size: 18px;}
+    .fly-edit span:hover{color: #5DB276;}
+  </style>
+</head>
+<body>
+  <div class="layui-form" style="padding: 20px 0 0 20px;">
+    <div class="layui-form-item">
+      <label class="layui-form-label">通知公告：</label>
+      <div class="layui-input-inline">
+        <input type="radio" name="notice" lay-filter="LAY-user-type" value="通知" title="通知" checked>
+        <input type="radio" name="notice" lay-filter="LAY-user-type" value="公告" title="公告">
+      </div>
+      <div class="layui-form-mid layui-word-aux">公告：有效期内首页弹出公告</div>
+    </div>
+    <div class="layui-form-item">
+      <div class="layui-inline">
+        <label class="layui-form-label">所属行业：</label>
+        <div class="layui-input-inline">
+          <label for="trade"></label><select id="trade" name="trade">
+          </select>
+        </div>
+      </div>
+      <div class="layui-inline">
+        <label class="layui-form-label" for="L_time">有效期：</label>
+        <div class="layui-input-inline">
+          <input type="text" id="L_time" name="start" lay-verify="required" placeholder="请输入有效期" autocomplete="off" class="layui-input">
+        </div>
+      </div>
+    </div>
+    <div class="layui-form-item">
+      <label class="layui-form-label">标题：</label>
+      <div class="layui-input-inline">
+        <input type="text" name="title" required lay-verify="required" autocomplete="off" class="layui-input" style="width: 515px;">
+      </div>
+    </div>
+    <div class="layui-form-item layui-form-text">
+      <label class="layui-form-label">内容：</label>
+      <div class="layui-input-inline">
+        <textarea name="content" required lay-verify="required" placeholder="详细描述" class="layui-textarea lot-editor" style="width: 515px;height: 300px;"></textarea>
+      </div>
+    </div>
+    <div class="layui-form-item layui-hide">
+      <input type="button" lay-submit lay-filter="LAY-notice-front-submit" id="LAY-notice-front-submit" value="立即发布">
+    </div>
+  </div>
+
+  <script th:src="@{/static/layui/layui.js}" type="text/javascript"></script>
+  <script th:inline="javascript">
+    layui.config({
+      base: [[@{'/static/admin/'}]] //静态资源所在路径
+    }).extend({
+      index: 'lib/index' //主入口模块
+      ,face: 'lib/extend/face' //主入口模块
+    }).use(['index', 'form','admin','laydate','notice','upload'], function(){
+      var $ = layui.$
+          ,form = layui.form
+          ,laydate =layui.laydate
+          ,notice = layui.notice
+          ,upload = layui.upload
+          ,admin = layui.admin;
+
+      laydate.render({
+        elem: '#L_time'
+        ,calendar: true
+        ,trigger: 'click'
+        ,theme: 'molv'
+        ,range: '到'
+        ,min: 0
+      });
+
+      var selection = document.getElementById("trade");
+      admin.req({
+        url: [[@{'/set/notice/listTrade'}]]
+        ,success: function(res){
+            if(0 === res.code){
+              var trades = res.data;
+              for(var i in trades){
+                selection.options.add(new Option(trades[i].description, trades[i].code));
+              }
+              form.render('select');
+            }else{
+              notice.error("加载行业列表异常：状态码【"+res.code+"】,错误信息【"+res.msg+"】");
+            }
+          }
+        });
+
+      layui.focusInsert = function(obj, str){
+        var result, val = obj.value;
+        obj.focus();
+        if(document.selection){ //ie
+          result = document.selection.createRange();
+          document.selection.empty();
+          result.text = str;
+        } else {
+          result = [val.substring(0, obj.selectionStart), str, val.substr(obj.selectionEnd)];
+          obj.focus();
+          obj.value = result.join('');
+        }
+      };
+
+      var layEditor = {
+
+        //计算字符长度
+        charLen: function(val){
+          var arr = val.split(''), len = 0;
+          for(var i = 0; i <  val.length ; i++){
+            arr[i].charCodeAt(0) < 299 ? len++ : len += 2;
+          }
+          return len;
+        }
+
+        //简易编辑器
+        ,layEditor: function(options){
+          var html = ['<div class="layui-unselect fly-edit">'
+            ,'<span type="face" title="插入表情"><i class="layui-icon layui-icon-face-smile-b iconfont" style="top: 1px;"></i></span>'
+            ,'<span type="picture" title="插入图片：img[src]"><i class="layui-icon layui-icon-picture iconfont" style="top: 1px;"></i></span>'
+            ,'<span type="href" title="超链接格式：a(href)[text]"><i class="layui-icon layui-icon-link iconfont"></i></span>'
+            ,'<span type="code" title="插入代码或引用"><i class="layui-icon layui-icon-fonts-code iconfont" style="top: 1px;"></i></span>'
+            ,'<span type="hr" title="插入水平线">hr</span>'
+            ,'<span type="yulan" title="预览"><i class="layui-icon layui-icon-release iconfont"></i></span>'
+            ,'</div>'].join('');
+
+          var log = {}, mod = {
+            face: function(editor, self){ //插入表情
+              var str = '', ul, face = layEditor.faces;
+              for(var key in face){
+                str += '<li title="'+ key +'"><img src="'+ face[key] +'"></li>';
+              }
+              str = '<ul id="LAY-editface" class="layui-clear">'+ str +'</ul>';
+              layer.tips(str, self, {
+                tips: 3
+                ,time: 0
+                ,skin: 'layui-edit-face'
+              });
+              $(document).on('click', function(){
+                layer.closeAll('tips');
+              });
+              $('#LAY-editface li').on('click', function(){
+                var title = $(this).attr('title') + ' ';
+                layui.focusInsert(editor[0], 'face' + title);
+              });
+            }
+            ,picture: function(editor){ //插入图片
+              layer.open({
+                type: 1
+                ,id: 'fly-jie-upload'
+                ,title: '插入图片'
+                ,area: 'auto'
+                ,shade: false
+                ,area: '465px'
+                ,fixed: false
+                ,offset: [
+                  editor.offset().top - $(window).scrollTop() + 'px'
+                  ,editor.offset().left + 'px'
+                ]
+                ,skin: 'layui-layer-border'
+                ,content: ['<ul class="layui-form layui-form-pane" style="margin: 20px;">'
+                  ,'<li class="layui-form-item">'
+                  ,'<label class="layui-form-label">URL</label>'
+                  ,'<div class="layui-input-inline">'
+                  ,'<input required name="image" placeholder="支持直接粘贴远程图片地址" value="" class="layui-input">'
+                  ,'</div>'
+                  ,'<button type="button" class="layui-btn layui-btn-primary" id="uploadImg"><i class="layui-icon">&#xe67c;</i>上传图片</button>'
+                  ,'</li>'
+                  ,'<li class="layui-form-item" style="text-align: center;">'
+                  ,'<button type="button" lay-submit lay-filter="uploadImages" class="layui-btn">确认</button>'
+                  ,'</li>'
+                  ,'</ul>'].join('')
+                ,success: function(layero, index){
+                  var image =  layero.find('input[name="image"]');
+
+                  //执行上传实例
+                  upload.render({
+                    elem: '#uploadImg'
+                    ,url: [[@{'/set/notice/image/'}]]
+                    ,done: function(res){
+                      if(res.code === 0){
+                        image.val('/lot'+res.data);
+                      } else {
+                        layer.msg(res.msg, {icon: 5});
+                      }
+                    }
+                  });
+
+                  form.on('submit(uploadImages)', function(data){
+                    var field = data.field;
+                    if(!field.image) return image.focus();
+                    layui.focusInsert(editor[0], 'img['+ field.image + '] ');
+                    layer.close(index);
+                  });
+                }
+              });
+            }
+            ,href: function(editor){ //超链接
+              layer.prompt({
+                title: '请输入合法链接'
+                ,shade: false
+                ,fixed: false
+                ,id: 'LAY_flyedit_href'
+                ,offset: [
+                  editor.offset().top - $(window).scrollTop() + 'px'
+                  ,editor.offset().left + 'px'
+                ]
+              }, function(val, index, elem){
+                if(!/^http(s*):\/\/[\S]/.test(val)){
+                  layer.tips('这根本不是个链接，不要骗我。', elem, {tips:1})
+                  return;
+                }
+                layui.focusInsert(editor[0], ' a('+ val +')['+ val + '] ');
+                layer.close(index);
+              });
+            }
+            ,code: function(editor){ //插入代码
+              layer.prompt({
+                title: '请贴入代码或任意文本'
+                ,formType: 2
+                ,maxlength: 10000
+                ,shade: false
+                ,id: 'LAY_flyedit_code'
+                ,area: ['800px', '360px']
+              }, function(val, index, elem){
+                layui.focusInsert(editor[0], '[pre]\n'+ val + '\n[/pre]');
+                layer.close(index);
+              });
+            }
+            ,hr: function(editor){ //插入水平分割线
+              layui.focusInsert(editor[0], '[hr]');
+            }
+            ,yulan: function(editor){ //预览
+              var content = editor.val();
+
+              content = /^\{html\}/.test(content)
+                      ? content.replace(/^\{html\}/, '')
+                      : layEditor.content(content);
+
+              layer.open({
+                type: 1
+                ,title: '预览'
+                ,shade: false
+                ,area: ['100%', '100%']
+                ,scrollbar: false
+                ,content: '<div class="detail-body" style="margin:20px;">'+ content +'</div>'
+              });
+            }
+          };
+
+          layui.use('face', function(face){
+            options = options || {};
+            layEditor.faces = face;
+            $(options.elem).each(function(index){
+              var that = this, othis = $(that), parent = othis.parent();
+              parent.prepend(html);
+              parent.find('.fly-edit span').on('click', function(event){
+                var type = $(this).attr('type');
+                mod[type].call(that, othis, this);
+                if(type === 'face'){
+                  event.stopPropagation()
+                }
+              });
+            });
+          });
+
+        }
+
+        ,escape: function(html){
+          return String(html||'').replace(/&(?!#?[a-zA-Z0-9]+;)/g, '&amp;')
+                  .replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&#39;').replace(/"/g, '&quot;');
+        }
+
+        //内容转义
+        ,content: function(content){
+          //支持的html标签
+          var html = function(end){
+            return new RegExp('\\n*\\['+ (end||'') +'(pre|hr|div|span|p|table|thead|th|tbody|tr|td|ul|li|ol|li|dl|dt|dd|h2|h3|h4|h5)([\\s\\S]*?)\\]\\n*', 'g');
+          };
+          content = layEditor.escape(content||'') //XSS
+                  .replace(/img\[([^\s]+?)\]/g, function(img){  //转义图片
+                    return '<img src="' + img.replace(/(^img\[)|(\]$)/g, '') + '">';
+                  }).replace(/@(\S+)(\s+?|$)/g, '@<a href="javascript:;" class="fly-aite">$1</a>$2') //转义@
+                  .replace(/face\[([^\s\[\]]+?)\]/g, function(face){  //转义表情
+                    var alt = face.replace(/^face/g, '');
+                    return '<img alt="'+ alt +'" title="'+ alt +'" src="' + layEditor.faces[alt] + '">';
+                  }).replace(/a\([\s\S]+?\)\[[\s\S]*?\]/g, function(str){ //转义链接
+                    var href = (str.match(/a\(([\s\S]+?)\)\[/)||[])[1];
+                    var text = (str.match(/\)\[([\s\S]*?)\]/)||[])[1];
+                    if(!href) return str;
+                    var rel =  /^(http(s)*:\/\/)\b(?!(\w+\.)*(sentsin.com|layui.com))\b/.test(href.replace(/\s/g, ''));
+                    return '<a href="'+ href +'" target="_blank"'+ (rel ? ' rel="nofollow"' : '') +'>'+ (text||href) +'</a>';
+                  }).replace(html(), '\<$1 $2\>').replace(html('/'), '\</$1\>') //转移HTML代码
+                  .replace(/\n/g, '<br>') //转义换行
+          return content;
+        }
+
+      };
+
+      //加载编辑器
+      layEditor.layEditor({
+        elem: '.lot-editor'
+      });
+
+    })
+  </script>
+</body>
+</html>
